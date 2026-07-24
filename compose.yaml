@@ -1,0 +1,109 @@
+# Local runner for the stdio MCP server. This is NOT a daemon — don't use
+# `docker compose up` (the server would just sit waiting on stdin). Instead:
+#
+#   docker compose build                        # local convenience build
+#   docker compose run --rm -T calendar-ics    # stdio JSON-RPC session (.env)
+#
+# -T is required when piping JSON-RPC: `compose run` allocates a pseudo-TTY by
+# default, which would merge stderr logs into the stdout JSON-RPC stream and
+# rewrite \n as \r\n.
+#
+# Canonical (multi-arch, OCI-labeled, registry-tagged) builds happen in
+# `.github/workflows/release.yml`; Claude Desktop keeps the plain `docker run`
+# invocation from README.md — this file is for local development and smoke
+# tests only.
+name: calendar-ics-mcp
+
+services:
+  calendar-ics:
+    build:
+      context: .
+      target: release
+    image: calendar-ics-mcp:latest
+    env_file:
+      # ICS_URL (secret) + optional TZ_DEFAULT / CACHE_TTL_SECONDS /
+      # FETCH_TIMEOUT_MS — same file the dev service uses; never on a command
+      # line. Optional so a fresh clone can `compose run dev cargo test`
+      # before writing a .env (Compose validates env_file for every service in
+      # the file, not just the one being run).
+      - path: .env
+        required: false
+    # Mirrors the hardened invocation documented in README.md / AGENTS.md.
+    init: true
+    read_only: true
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    # stdio JSON-RPC server: keep stdin open; no ports, no healthcheck.
+    # No `restart:` policy — this service is only ever `compose run`, and a
+    # restart policy would turn a stray `compose up` into a crash loop.
+    stdin_open: true
+
+  # Long-running MCP Streamable HTTP mode, for an agent rather than a desktop
+  # client — unlike the stdio service this one IS a daemon:
+  #
+  #   docker compose up -d calendar-ics-http
+  #
+  # Reference deployment. The healthcheck runs the binary itself as the probe
+  # because the scratch image has no shell or curl.
+  calendar-ics-http:
+    build:
+      context: .
+      target: release
+    image: calendar-ics-mcp:latest
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      # Binds all interfaces *inside* the container; the port mapping below is
+      # what actually decides reachability.
+      HTTP_BIND: 0.0.0.0:8590
+      # Strongly recommended before exposing this beyond loopback — without it
+      # anyone who can reach the port can read the calendar.
+      # HTTP_BEARER_TOKEN: …
+    ports:
+      # Loopback-only by default. Widen to "8590:8590" (all host interfaces)
+      # only with HTTP_BEARER_TOKEN set and a TLS-terminating proxy in front.
+      - "127.0.0.1:8590:8590"
+    init: true
+    read_only: true
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "/calendar-ics-mcp", "--health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  # Dockerized Rust toolchain — the canonical way to run cargo in this repo
+  # (no host Rust toolchain assumed):
+  #
+  #   docker compose run --rm dev cargo test
+  #   docker compose run --rm -e TZ=Pacific/Kiritimati dev cargo test
+  #   docker compose run --rm dev cargo clippy --all-targets -- -D warnings
+  #   docker compose run --rm dev cargo fmt --check
+  #   docker compose run --rm -T dev cargo run          # stdio dev session (.env)
+  #
+  # Named volumes keep the cargo registry and build cache warm between runs;
+  # /app/target lives only in the volume, never on the host.
+  dev:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM rust:1.97.1-slim
+        RUN rustup component add clippy rustfmt
+    working_dir: /app
+    volumes:
+      - .:/app
+      - cargo-registry:/usr/local/cargo/registry
+      - cargo-target:/app/target
+    env_file:
+      - path: .env
+        required: false
+
+volumes:
+  cargo-registry:
+  cargo-target:

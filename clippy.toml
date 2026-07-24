@@ -1,0 +1,7 @@
+disallowed-macros = [
+    { path = "std::println", reason = "stdout is JSON-RPC only — log via logger (stderr)" },
+    { path = "std::print", reason = "stdout is JSON-RPC only — log via logger (stderr)" },
+]
+disallowed-types = [
+    { path = "chrono::Local", reason = "the host timezone must never be consulted; use chrono_tz zones" },
+]

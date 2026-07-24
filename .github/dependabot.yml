@@ -1,0 +1,37 @@
+version: 2
+
+updates:
+  # Rust dependencies. `rrule` is pinned minor on purpose (UNTIL inclusivity,
+  # WKST=MO default, and wall-clock-preserving DST instants are load-bearing
+  # behaviors) — bump it deliberately, with the fixture suite green.
+  - package-ecosystem: cargo
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      cargo-minor-patch:
+        update-types:
+          - minor
+          - patch
+    ignore:
+      - dependency-name: rrule
+        update-types:
+          - version-update:semver-minor
+          - version-update:semver-major
+
+  # Base images in Dockerfile (the cargo-zigbuild builder). Note: the `dev`
+  # compose service pins `rust:<version>-slim` via `dockerfile_inline`, which
+  # Dependabot cannot see — keep it in sync with rust-toolchain.toml by hand.
+  - package-ecosystem: docker
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+
+  # Actions used by the release workflow.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3

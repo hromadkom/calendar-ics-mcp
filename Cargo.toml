@@ -1,0 +1,41 @@
+[package]
+name = "calendar-ics-mcp"
+version = "0.2.0"
+description = "Read-only MCP server that exposes an Outlook/Exchange published ICS calendar feed as MCP tools"
+authors = ["Martin Hromádko <hromadko.m@gmail.com>"]
+edition = "2024"
+rust-version = "1.85"
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/hromadkom/calendar-ics-mcp"
+homepage = "https://github.com/hromadkom/calendar-ics-mcp"
+keywords = ["mcp", "ics", "icalendar", "calendar", "outlook"]
+categories = ["command-line-utilities", "date-and-time"]
+# Distributed as a container image, not a crate. Flip this to publish on
+# crates.io; the metadata above is already complete for that.
+publish = false
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+chrono-tz = "0.10"
+rrule = "0.14"
+regex = "1.11"
+windows-timezones = "0.5"
+ureq = { version = "3.3", default-features = false, features = ["rustls"] }
+signal-hook = { version = "0.4", default-features = false }
+tiny_http = "0.12"
+
+# Full debuginfo makes linking the test binaries memory-hungry enough to
+# OOM the Docker VM; line tables keep useful panic backtraces at a fraction of
+# the cost.
+[profile.dev]
+debug = "line-tables-only"
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

@@ -1,0 +1,151 @@
+name: Release
+
+# Publishing is driven entirely by GitHub Releases: create a release with tag
+# `vX.Y.Z` and this workflow verifies, builds, and pushes the images.
+#
+# Prerequisites in the repository settings:
+#   Secrets   DOCKERHUB_USERNAME, DOCKERHUB_TOKEN (an access token, not the password)
+#   Variables IMAGE_NAME (optional, default: hromadkom/calendar-ics-mcp)
+#             REGISTRY   (optional, default: docker.io)
+on:
+  release:
+    types: [published]
+  # Manual re-run, e.g. after fixing registry credentials. Takes the tag to
+  # build; it must already exist and must match Cargo.toml.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to build and push (e.g. v0.3.0)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.event.release.tag_name || inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  # Never publish an image that does not build clean and pass its tests, and
+  # never publish a tag whose version disagrees with the crate manifest.
+  verify:
+    name: Verify and test
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.resolve.outputs.version }}
+    steps:
+      - name: Check out the release tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name || inputs.tag }}
+
+      - name: Resolve version and check it matches Cargo.toml
+        id: resolve
+        run: |
+          set -euo pipefail
+          tag="${{ github.event.release.tag_name || inputs.tag }}"
+          version="${tag#v}"
+
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::tag '$tag' is not a vX.Y.Z semver tag"
+            exit 1
+          fi
+
+          manifest=$(grep -m1 '^version = ' Cargo.toml | cut -d'"' -f2)
+          if [[ "$manifest" != "$version" ]]; then
+            echo "::error::tag '$tag' does not match Cargo.toml version '$manifest'."
+            echo "::error::Bump Cargo.toml (and Cargo.lock), commit, then re-tag."
+            exit 1
+          fi
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Releasing $version"
+
+      - name: Warn if CHANGELOG has no entry
+        run: |
+          if ! grep -q "^## \[${{ steps.resolve.outputs.version }}\]" CHANGELOG.md; then
+            echo "::warning::CHANGELOG.md has no '## [${{ steps.resolve.outputs.version }}]' section."
+          fi
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # The hermetic gate: fmt + clippy -D warnings + the full test suite,
+      # exactly what contributors run locally as `docker build --target test .`
+      - name: Run the hermetic gate (fmt + clippy + tests)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: test
+          push: false
+          platforms: linux/amd64
+          cache-from: type=gha,scope=test
+          cache-to: type=gha,mode=max,scope=test
+
+  publish:
+    name: Build and push image
+    needs: verify
+    runs-on: ubuntu-latest
+    # Add `environment: release` here (and create it in repo settings) if you
+    # ever want a manual approval step before images go out.
+    steps:
+      - name: Check out the release tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name || inputs.tag }}
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # No QEMU: the builder stage is pinned to $BUILDPLATFORM and
+      # cargo-zigbuild cross-compiles both musl targets natively. Emulating
+      # the arm64 build here would be an order of magnitude slower.
+
+      - name: Log in to the registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ vars.REGISTRY || 'docker.io' }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Derive tags and OCI labels
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ vars.REGISTRY || 'docker.io' }}/${{ vars.IMAGE_NAME || 'hromadkom/calendar-ics-mcp' }}
+          tags: |
+            type=raw,value=${{ needs.verify.outputs.version }}
+            type=sha,format=short
+            type=raw,value=latest,enable=${{ github.event_name == 'workflow_dispatch' || !github.event.release.prerelease }}
+          labels: |
+            org.opencontainers.image.title=calendar-ics-mcp
+            org.opencontainers.image.description=Read-only MCP server exposing an Outlook/Exchange published ICS calendar feed as MCP tools
+            org.opencontainers.image.licenses=MIT
+            org.opencontainers.image.version=${{ needs.verify.outputs.version }}
+
+      - name: Build and push (linux/amd64, linux/arm64)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: release
+          platforms: linux/amd64,linux/arm64
+          push: true
+          # Build provenance is worth recording. An SBOM is not: the runtime
+          # stage is FROM scratch with a single static binary and no package
+          # manager, so the scanner would attest to an empty package list.
+          provenance: mode=max
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=release
+          cache-to: type=gha,mode=max,scope=release
+
+      - name: Summary
+        run: |
+          {
+            echo "### Published"
+            echo
+            echo '```'
+            echo "${{ steps.meta.outputs.tags }}"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

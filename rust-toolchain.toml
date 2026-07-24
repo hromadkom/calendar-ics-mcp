@@ -1,0 +1,5 @@
+[toolchain]
+# Keep in sync with the rust:<version>-slim pins in compose.yaml (dev service)
+# and Dockerfile (builder stage).
+channel = "1.97.1"
+components = ["clippy", "rustfmt"]

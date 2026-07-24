@@ -1,0 +1,82 @@
+name: Bug report
+description: Something behaves incorrectly — wrong events, wrong times, a crash, or a protocol error.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Before you post: never paste your real `ICS_URL`.** It is an unauthenticated
+        bearer credential for your entire calendar. Redact it, and anonymize any ICS
+        snippet you attach. See [SECURITY.md](../blob/main/SECURITY.md).
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What did you expect, and what did you get instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction
+      description: |
+        Ideally the smallest **anonymized** VEVENT that reproduces it, plus the tool
+        call you made. Replace real summaries, locations, UIDs, and URLs with
+        placeholders — the timezone, RRULE, EXDATE, and RECURRENCE-ID lines are the
+        parts that matter.
+      render: text
+      placeholder: |
+        BEGIN:VEVENT
+        UID:repro@example
+        DTSTART;TZID=Europe/Prague:20260302T090000
+        DTEND;TZID=Europe/Prague:20260302T093000
+        RRULE:FREQ=WEEKLY;BYDAY=MO
+        SUMMARY:Example
+        END:VEVENT
+
+        Called: get_events { "date": "2026-03-30" }
+        Expected: one event at 09:00+02:00
+        Got: no events
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Release tag or image tag. The server reports it in the `initialize` response's `serverInfo`, and `GET /healthz` returns it in HTTP mode.
+      placeholder: "0.2.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: transport
+    attributes:
+      label: Transport
+      options:
+        - stdio (default)
+        - MCP Streamable HTTP (HTTP_BIND set)
+    validations:
+      required: true
+
+  - type: input
+    id: client
+    attributes:
+      label: MCP client
+      placeholder: "Claude Desktop 1.x / MCP Inspector / custom"
+
+  - type: input
+    id: config
+    attributes:
+      label: Relevant configuration
+      description: "`TZ_DEFAULT`, `CACHE_TTL_SECONDS`, etc. — omit `ICS_URL` and any token."
+      placeholder: "TZ_DEFAULT=Europe/Prague"
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Log output (stderr)
+      description: Paste the stderr JSON lines. They are designed not to contain your feed URL, but check before posting.
+      render: text

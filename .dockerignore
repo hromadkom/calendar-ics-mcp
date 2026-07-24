@@ -1,0 +1,10 @@
+target
+.git
+compose.yaml
+.env
+.env.*
+bin
+*.md
+.github
+.vscode
+.idea

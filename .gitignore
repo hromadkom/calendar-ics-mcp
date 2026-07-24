@@ -1,0 +1,16 @@
+/target/
+.env
+.env.*
+!.env.example
+.mcp.json
+*.log
+.DS_Store
+
+# Calendar snapshots. The manual acceptance procedure encourages dumping the
+# real feed to a file — never commit one; it is real calendar data, and the
+# fetch URL may be embedded in it.
+*.ics
+!tests/fixtures/*.ics
+
+# Binary copied out of the cargo-target volume for a non-Docker run.
+/calendar-ics-mcp

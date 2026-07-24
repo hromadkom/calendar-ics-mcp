@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/hromadkom/calendar-ics-mcp/security/advisories/new
+    about: Report privately. Never open a public issue for a security problem, and never paste your feed URL.
+  - name: Question or usage help
+    url: https://github.com/hromadkom/calendar-ics-mcp/discussions
+    about: Setup problems, "how do I get my ICS URL", and general questions.

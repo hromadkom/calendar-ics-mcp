@@ -1,0 +1,41 @@
+name: Feature request
+description: Suggest a capability or an improvement.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This server is deliberately narrow: three read-only tools and exactly one kind
+        of network call (an HTTPS `GET` on the configured feed). Proposals that keep it
+        that way have a much better chance — anything that adds write access, a second
+        network destination, persistence, or telemetry is out of scope by design.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      description: Describe the situation, not the solution. What are you doing today, and where does it fall short?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: What should happen instead? If it affects tool input or output, sketch the JSON.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Can this be done today with the existing tools, or in your MCP client?
+
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope check
+      options:
+        - label: This keeps the server read-only (no calendar writes, no other network destinations).
+          required: true
