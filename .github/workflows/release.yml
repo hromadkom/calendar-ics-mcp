@@ -74,7 +74,7 @@ jobs:
       # The hermetic gate: fmt + clippy -D warnings + the full test suite,
       # exactly what contributors run locally as `docker build --target test .`
       - name: Run the hermetic gate (fmt + clippy + tests)
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           target: test
@@ -125,7 +125,7 @@ jobs:
             org.opencontainers.image.version=${{ needs.verify.outputs.version }}
 
       - name: Build and push (linux/amd64, linux/arm64)
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           target: release
