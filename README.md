@@ -151,7 +151,7 @@ Notes:
   container — the URL never appears in the process arguments or in `docker ps`.
 - Claude Desktop spawns commands with a minimal `PATH`; if `docker` is not
   found, use an absolute path (e.g. `/usr/local/bin/docker`).
-- Prefer pinning a version tag (`:0.2.0`) over `:latest`.
+- Prefer pinning a version tag (`:0.3.0`) over `:latest`.
 
 ### Without Docker
 

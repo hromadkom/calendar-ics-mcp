@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-07-25
+
+First public release. Functionally identical to 0.2.0 apart from the two
+compose hardening fixes below; the rest is open-sourcing work.
+
 ### Changed
 
 - Open-sourced under the MIT license. Added `CONTRIBUTING.md`, `SECURITY.md`,
@@ -29,6 +34,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Two identifiers in `tests/fixtures/feed.ics` were genericized for the public
   release (the Zoom host in `zoom-loc@fixture` and the summary of
   `teams-xprop@fixture`). No behavior changed.
+
+### Fixed
+
+- `AGENTS.md` and `src/ics/rrule_slots.rs` claimed EXDATE *and RDATE* are
+  withheld from the `rrule` crate because `expand.rs` owns them. RDATE is not
+  parsed anywhere; only EXDATE is withheld.
+- The bug-report issue form linked `SECURITY.md` relatively, which 404s from
+  `/issues/new` — the "never paste your feed URL" policy was unreachable from
+  the form where credentials get pasted.
 
 ## [0.2.0] - 2026-07-24
 
@@ -88,5 +102,6 @@ binary idles at ~3 MB RSS and the whole image is ~4 MB.
   volumes) — no host Rust toolchain assumed; Exchange-style test fixture with
   135 tests including real-subprocess stdio and HTTP smoke tests.
 
-[Unreleased]: https://github.com/hromadkom/calendar-ics-mcp/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/hromadkom/calendar-ics-mcp/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/hromadkom/calendar-ics-mcp/releases/tag/v0.3.0
 [0.2.0]: https://github.com/hromadkom/calendar-ics-mcp/releases/tag/v0.2.0

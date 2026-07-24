@@ -1,6 +1,6 @@
 [package]
 name = "calendar-ics-mcp"
-version = "0.2.0"
+version = "0.3.0"
 description = "Read-only MCP server that exposes an Outlook/Exchange published ICS calendar feed as MCP tools"
 authors = ["Martin Hromádko <hromadko.m@gmail.com>"]
 edition = "2024"
