@@ -1,7 +1,8 @@
 //! RRULE slot generation via the `rrule` crate, used strictly as an
-//! occurrence generator: EXDATE/RDATE are never handed to it — all exclusion
-//! and override logic lives in `expand.rs`, exactly like the TS layer kept it
-//! on top of rrule.js.
+//! occurrence generator: EXDATE is never handed to it — all exclusion and
+//! override logic lives in `expand.rs`, exactly like the TS layer kept it on
+//! top of rrule.js. RDATE is not parsed anywhere in this codebase (Exchange
+//! does not emit it); see the scope note in README.md.
 
 use chrono::{Duration, LocalResult, NaiveDate, NaiveDateTime, NaiveTime, TimeZone, Utc};
 

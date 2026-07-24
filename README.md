@@ -71,7 +71,7 @@ truncated, bad arguments) come back as a normal tool result with
 
 Timed events use ISO 8601 with the `TZ_DEFAULT` offset; all-day events use
 date-only strings with an **exclusive** end date. `get_events_range` returns
-`from`/`to` instead of `date`.
+the same envelope with `from` and `to` in place of `date`.
 
 - `busy_status` comes from `X-MICROSOFT-CDO-BUSYSTATUS` (`BUSY` / `TENTATIVE` /
   `FREE` / `OOF`; defaults to `BUSY` when absent).
@@ -312,8 +312,10 @@ npx @modelcontextprotocol/inspector \
   docker run -i --rm -e ICS_URL hromadkom/calendar-ics-mcp:latest   # call feed_info first
 ```
 
-`feed_info` should report `feed_bytes` well above 66 000 (the point of this
-server), `ends_with_end_vcalendar: true`, and a plausible `vevent_count`.
+`feed_info` should report `ends_with_end_vcalendar: true`, a `feed_bytes`
+matching the full size of the feed, and a plausible `vevent_count`. If your
+feed is larger than a generic fetch tool's response cap, that gap is the whole
+point of this server.
 
 ## Releasing
 

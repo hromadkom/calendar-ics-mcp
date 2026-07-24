@@ -7,7 +7,8 @@ body:
       value: |
         **Before you post: never paste your real `ICS_URL`.** It is an unauthenticated
         bearer credential for your entire calendar. Redact it, and anonymize any ICS
-        snippet you attach. See [SECURITY.md](../blob/main/SECURITY.md).
+        snippet you attach. See
+        [SECURITY.md](https://github.com/hromadkom/calendar-ics-mcp/blob/main/SECURITY.md).
 
   - type: textarea
     id: what-happened

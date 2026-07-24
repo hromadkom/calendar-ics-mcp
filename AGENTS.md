@@ -85,8 +85,9 @@ One-directional dependencies:
   Read its doc comments before touching it; every acceptance criterion has a
   named test module in `tests/expand_test.rs`.
 - `src/ics/rrule_slots.rs` wraps the `rrule` crate as a bare slot generator:
-  EXDATE/RDATE are NEVER handed to the crate (expand.rs owns those, exactly
-  like the TS layer did over rrule.js). A Z-less `UNTIL` is resolved in the
+  EXDATE is NEVER handed to the crate (expand.rs owns it, exactly like the TS
+  layer did over rrule.js); RDATE is not parsed at all, by anyone — see the
+  scope note in README.md. A Z-less `UNTIL` is resolved in the
   event's DTSTART timezone and rewritten as UTC before the crate sees it
   (node-ical parity, verified empirically — the crate alone would use the
   machine tz).
