@@ -111,7 +111,7 @@ jobs:
 
       - name: Derive tags and OCI labels
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ${{ vars.REGISTRY || 'docker.io' }}/${{ vars.IMAGE_NAME || 'hromadkom/calendar-ics-mcp' }}
           tags: |
