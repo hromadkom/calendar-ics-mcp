@@ -272,10 +272,11 @@ docker build --target test .                                      # hermetic gat
 npx @modelcontextprotocol/inspector docker compose run --rm -T calendar-ics
 ```
 
-`docker build --target test .` is the gate. Nothing runs it on pull requests —
-run it yourself before opening one (see [CONTRIBUTING.md](CONTRIBUTING.md)).
-The release workflow runs the same gate and refuses to publish an image if it
-fails.
+`docker build --target test .` is the gate. Run it yourself before opening a
+pull request (see [CONTRIBUTING.md](CONTRIBUTING.md)); CI then runs the same
+gate — plus the host-TZ proof and a musl release build — on the pull request,
+and the release workflow runs it once more and refuses to publish an image if
+it fails.
 
 ### Running the image locally
 

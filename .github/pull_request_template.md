@@ -9,7 +9,8 @@
 
 ## Checks
 
-<!-- Nothing runs checks on your PR; the hermetic gate runs on your machine. -->
+<!-- CI runs the same hermetic gate on this PR, but run it locally first —
+     it is far quicker to fix a formatting nit before pushing than after. -->
 
 - [ ] `docker build --target test .` passes (fmt + clippy + full test suite)
 - [ ] `docker compose run --rm -e TZ=Pacific/Kiritimati dev cargo test` passes
