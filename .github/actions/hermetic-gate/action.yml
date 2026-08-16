@@ -1,0 +1,60 @@
+name: Hermetic gate
+description: >-
+  Runs the hermetic gate — fmt, clippy and the full test suite inside the
+  Dockerfile `test` stage — then proves the suite is independent of the host
+  timezone. The single definition of "does this tree pass?", shared by ci.yml
+  and release.yml so the two can never disagree about what the gate is.
+
+# Composite rather than a reusable workflow on purpose: the shared unit is a
+# sequence of steps, not a whole job. A `workflow_call` job would report as
+# "<caller job> / <called job>", renaming the required status checks, and would
+# force release.yml to split `verify` apart from its `version` output.
+
+inputs:
+  write-cache:
+    description: >-
+      Export the BuildKit layer cache ("true"/"false"). Only ci.yml on main
+      passes true — see the note in AGENTS.md on why main is the sole producer.
+    required: false
+    default: "false"
+  image-tag:
+    description: Tag for the loaded gate image, reused by the timezone re-run.
+    required: false
+    default: calendar-ics-mcp:ci-test
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Buildx
+      uses: docker/setup-buildx-action@v4
+
+    # `cargo fmt --check`, `cargo clippy --all-targets --locked -- -D warnings`
+    # and `cargo test --locked` all run inside this build — the `test` stage
+    # chains them with `&&`, so a failure here fails the step. `--locked` also
+    # proves Cargo.lock is in sync with Cargo.toml.
+    - name: Run the hermetic gate (fmt + clippy + tests)
+      uses: docker/build-push-action@v7
+      with:
+        context: .
+        target: test
+        push: false
+        # Keep the built stage in the local daemon so the timezone re-run below
+        # can reuse its already-compiled test binaries.
+        load: true
+        tags: ${{ inputs.image-tag }}
+        platforms: linux/amd64
+        cache-from: type=gha,scope=test
+        # Composite inputs are always strings, so compare against "true".
+        # (Written as `&& value || ''` on purpose: in the `A && B || C` idiom an
+        # empty B is falsy and would fall through to C, so the non-empty branch
+        # has to be B.)
+        cache-to: ${{ inputs.write-cache == 'true' && 'type=gha,mode=max,scope=test' || '' }}
+
+    # The suite must pass under any host timezone (clippy.toml bans
+    # chrono::Local; this proves it empirically). Re-running the test binaries
+    # the gate just compiled costs about a second and rebuilds nothing.
+    - name: Prove host-TZ independence
+      shell: bash
+      run: |
+        docker run --rm -e TZ=Pacific/Kiritimati "${{ inputs.image-tag }}" \
+          cargo test --locked --offline

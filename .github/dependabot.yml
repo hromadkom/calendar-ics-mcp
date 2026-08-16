@@ -29,9 +29,14 @@ updates:
       interval: weekly
     open-pull-requests-limit: 3
 
-  # Actions used by the release workflow.
+  # Actions used by the workflows and by the composite actions they call.
+  # `directory: "/"` would cover `.github/workflows` and a root `action.yml`
+  # only — the pins inside `.github/actions/*/action.yml` would silently stop
+  # being updated, so those paths are listed explicitly.
   - package-ecosystem: github-actions
-    directory: "/"
+    directories:
+      - "/"
+      - "/.github/actions/hermetic-gate"
     schedule:
       interval: weekly
     open-pull-requests-limit: 3

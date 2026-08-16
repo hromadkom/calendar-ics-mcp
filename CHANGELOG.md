@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `TZ=Pacific/Kiritimati`) and by a `linux/amd64` + `linux/arm64` musl release
   build, which covers the `panic = "abort"` + LTO configuration the debug-only
   gate never exercises.
+- The gate is defined once, in the `.github/actions/hermetic-gate` composite
+  action, and called by both `ci.yml` and `release.yml`. The release path
+  previously carried its own copy, which could drift in configuration and did
+  not run the host-TZ proof; it now does.
 
 ## [0.3.0] - 2026-07-25
 
