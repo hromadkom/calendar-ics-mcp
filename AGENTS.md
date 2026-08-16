@@ -40,7 +40,7 @@ docker compose run --rm dev cargo fmt --check                   # (or `cargo fmt
 docker compose run --rm -T dev cargo run                        # stdio dev session (.env)
 docker compose run --rm -p 8590:8590 -e HTTP_BIND=0.0.0.0:8590 dev cargo run  # HTTP dev session
 
-docker build --target test .                # hermetic gate (fmt+clippy+test) — nothing runs it on PRs
+docker build --target test .                # hermetic gate (fmt+clippy+test) — CI runs this on every PR
 docker compose build                        # local release-image build
 docker compose run --rm -T calendar-ics     # stdio session against the image
                                             # (-T required when piping; never `compose up` this one)
@@ -52,6 +52,27 @@ The `dev` service caches the cargo registry and build tree in named volumes;
 `/target` never exists on the host. The suite must pass under any host TZ —
 nothing in the pipeline consults the host timezone (`chrono::Local` is banned
 via clippy.toml, as are `println!`/`print!`).
+
+## CI
+
+`.github/workflows/ci.yml` runs on every pull request against `main` and on
+every push to `main`. Two jobs, no secrets and no registry writes:
+
+- **Hermetic gate** — `docker build --target test .`, the same stage
+  contributors run locally, then re-runs the test binaries it just compiled
+  under `TZ=Pacific/Kiritimati` (about a second; nothing recompiles) as the
+  host-TZ independence proof.
+- **Release build** — `--target release` for linux/amd64 + arm64 without
+  pushing. The gate only ever builds debug, so `panic = "abort"` + LTO +
+  `opt-level = "z"` on musl is otherwise first exercised at release time,
+  when it is too late to be cheap.
+
+Only pushes to `main` write the BuildKit layer cache: a pull request's cache
+is readable by that pull request alone, so writing it there would buy nothing
+while evicting the shared entry every pull request reads. Cache scopes
+(`test`, `release`) are shared with `release.yml`. Note that BuildKit
+`--mount=type=cache` mounts are *not* carried by `type=gha`, so the release
+job's cargo registry starts cold each run regardless.
 
 ## Releasing
 

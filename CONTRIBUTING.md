@@ -33,11 +33,11 @@ Do not run `cargo` directly on the host. Build artifacts live only in the
 
 ## The checks your change must pass
 
-Nothing runs checks on your pull request — the gate is a single hermetic Docker
-build that runs formatting, lints, and the full test suite in one pass, and you
-run it yourself. (The release workflow runs the same gate, so a regression that
-slips through blocks the next release rather than being caught on your PR —
-please don't let it get that far.)
+The gate is a single hermetic Docker build that runs formatting, lints, and the
+full test suite in one pass. `.github/workflows/ci.yml` runs it on every pull
+request, and the release workflow runs it again before publishing — but run it
+yourself first. A round trip through CI to learn that a file needs
+reformatting is a slow way to find out.
 
 ```bash
 docker build --target test .

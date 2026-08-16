@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `.github/workflows/ci.yml` runs the hermetic gate (fmt + clippy + the full
+  test suite) on every pull request and push to `main`. Previously nothing ran
+  it on pull requests, so dependency bumps merged unverified and a regression
+  surfaced only when a release was cut. The gate is followed by the host-TZ
+  independence proof (re-running the freshly compiled test binaries under
+  `TZ=Pacific/Kiritimati`) and by a `linux/amd64` + `linux/arm64` musl release
+  build, which covers the `panic = "abort"` + LTO configuration the debug-only
+  gate never exercises.
+
 ## [0.3.0] - 2026-07-25
 
 First public release. Functionally identical to 0.2.0 apart from the two
