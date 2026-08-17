@@ -67,12 +67,35 @@ every push to `main`. Two jobs, no secrets and no registry writes:
   `opt-level = "z"` on musl is otherwise first exercised at release time,
   when it is too late to be cheap.
 
-Only pushes to `main` write the BuildKit layer cache: a pull request's cache
-is readable by that pull request alone, so writing it there would buy nothing
-while evicting the shared entry every pull request reads. Cache scopes
-(`test`, `release`) are shared with `release.yml`. Note that BuildKit
-`--mount=type=cache` mounts are *not* carried by `type=gha`, so the release
-job's cargo registry starts cold each run regardless.
+The gate itself lives in **`.github/actions/hermetic-gate`** (a composite
+action) and is called by both `ci.yml` and `release.yml`, so the two cannot
+disagree about what the gate is. It is composite rather than a `workflow_call`
+reusable workflow deliberately: a called workflow's job reports as `<caller
+job> / <called job>`, which would rename the required status checks below and
+force `release.yml` to split `verify` apart from its `version` output. Callers
+do their own `actions/checkout` — the action starts at Buildx — so
+`release.yml` can keep checking out the release tag.
+
+`main` is the **sole producer** of the BuildKit layer cache. A pull request's
+cache is readable by that pull request alone, and a release runs on a tag ref
+whose cache is readable from neither `main` nor pull requests; both would
+write entries nothing can restore. Everything else only consumes, via
+`cache-from`. Scopes (`test`, `release`) are shared between the two workflows.
+Note that BuildKit `--mount=type=cache` mounts are *not* carried by
+`type=gha`, so the release job's cargo registry starts cold each run
+regardless.
+
+Because Dependabot's `github-actions` ecosystem scans `.github/workflows` and
+a *root* `action.yml` only, `.github/dependabot.yml` lists
+`/.github/actions/hermetic-gate` explicitly — without it the action pins in
+there would silently stop being updated. Add a directory entry alongside any
+new composite action.
+
+The `Protected main` ruleset requires a pull request (zero approvals — a solo
+maintainer cannot approve their own) and both check names above, with the
+strict up-to-date policy. Repository admins retain an always-bypass, so the
+rules are a guardrail rather than a wall. Renaming either job breaks the
+required checks; update the ruleset in the same change.
 
 ## Releasing
 
