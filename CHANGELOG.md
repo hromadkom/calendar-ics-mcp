@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-09-15
+
 ### Added
 
 - `.github/workflows/ci.yml` runs the hermetic gate (fmt + clippy + the full
@@ -21,6 +23,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   action, and called by both `ci.yml` and `release.yml`. The release path
   previously carried its own copy, which could drift in configuration and did
   not run the host-TZ proof; it now does.
+
+### Changed
+
+- Dependency bumps: `ureq` 3.4.0 → 3.4.1, `cargo-zigbuild` builder image
+  0.23.0 → 0.23.4, `docker/login-action` 4.5.2 → 4.6.0.
 
 ## [0.3.0] - 2026-07-25
 
@@ -117,6 +124,7 @@ binary idles at ~3 MB RSS and the whole image is ~4 MB.
   volumes) — no host Rust toolchain assumed; Exchange-style test fixture with
   135 tests including real-subprocess stdio and HTTP smoke tests.
 
-[Unreleased]: https://github.com/hromadkom/calendar-ics-mcp/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/hromadkom/calendar-ics-mcp/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/hromadkom/calendar-ics-mcp/releases/tag/v0.3.1
 [0.3.0]: https://github.com/hromadkom/calendar-ics-mcp/releases/tag/v0.3.0
 [0.2.0]: https://github.com/hromadkom/calendar-ics-mcp/releases/tag/v0.2.0
