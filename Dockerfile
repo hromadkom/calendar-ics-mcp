@@ -4,7 +4,7 @@
 # cargo-zigbuild (zig cc handles ring's C/asm for both musl targets) — no QEMU
 # anywhere. rust-toolchain.toml pins the actual compiler; rustup installs it
 # into a cached layer on first build.
-FROM --platform=$BUILDPLATFORM ghcr.io/rust-cross/cargo-zigbuild:0.23.0 AS base
+FROM --platform=$BUILDPLATFORM ghcr.io/rust-cross/cargo-zigbuild:0.23.4 AS base
 WORKDIR /app
 COPY rust-toolchain.toml ./
 ARG TARGETPLATFORM
